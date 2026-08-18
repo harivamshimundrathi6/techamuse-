@@ -181,5 +181,96 @@ export const mockChallenges: Challenge[] = [
       realGuessedPercent: 60,
       aiGuessedPercent: 40
     }
+  },
+  // More challenges to make 15
+  {
+    id: "ch-010",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1542314831-c6a4d1421051?auto=format&fit=crop&q=80&w=800",
+      title: "Deep Sea Diver",
+      context: "Marine biologist exploring a coral reef system."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1522039553444-a95e7c276ee9?auto=format&fit=crop&q=80&w=800",
+      prompt: "Deep sea diver exploring an ancient underwater ruin, bioluminescent plants, hyperrealistic",
+      model: "Midjourney v6",
+      giveawayClue: "The air bubbles coming from the regulator travel downwards instead of towards the surface."
+    },
+    globalStats: { realGuessedPercent: 62, aiGuessedPercent: 38 }
+  },
+  {
+    id: "ch-011",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1517511620798-cec17d428bc0?auto=format&fit=crop&q=80&w=800",
+      title: "Abstract Architecture",
+      context: "Modern art museum exterior shot at noon."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1518005020951-eccb494ad742?auto=format&fit=crop&q=80&w=800",
+      prompt: "Futuristic parametric architecture, impossible geometry, photorealistic, 8k",
+      model: "Stable Diffusion XL",
+      giveawayClue: "The shadows of the building fall in three different directions simultaneously."
+    },
+    globalStats: { realGuessedPercent: 44, aiGuessedPercent: 56 }
+  },
+  {
+    id: "ch-012",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1444703686981-a3abbc4d4fe3?auto=format&fit=crop&q=80&w=800",
+      title: "Milky Way Galaxy",
+      context: "Long exposure astrophotography from a dark sky reserve."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1465101162946-4377e57745c3?auto=format&fit=crop&q=80&w=800",
+      prompt: "The milky way galaxy seen from an alien planet, vivid colors, realistic rendering",
+      model: "DALL-E 3",
+      giveawayClue: "There are two full moons visible in the sky with inconsistent crater patterns."
+    },
+    globalStats: { realGuessedPercent: 70, aiGuessedPercent: 30 }
+  },
+  {
+    id: "ch-013",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1555685812-4b943f1cb0eb?auto=format&fit=crop&q=80&w=800",
+      title: "Server Farm",
+      context: "Interior view of a massive cloud computing data center."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&q=80&w=800",
+      prompt: "Endless rows of glowing quantum computers, cinematic lighting, hyper-detailed",
+      model: "Midjourney v6",
+      giveawayClue: "The server racks blend seamlessly into the floor tiles without any structural base."
+    },
+    globalStats: { realGuessedPercent: 52, aiGuessedPercent: 48 }
+  },
+  {
+    id: "ch-014",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1517430816045-df4b7de11d1d?auto=format&fit=crop&q=80&w=800",
+      title: "Vintage Camera",
+      context: "Macro photography of an antique film camera lens."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1502982720700-baf97d4220a8?auto=format&fit=crop&q=80&w=800",
+      prompt: "Steampunk camera made of brass and glass, intricate gears, photorealistic macro",
+      model: "Stable Diffusion XL",
+      giveawayClue: "Some of the gear teeth overlap instead of interlocking correctly."
+    },
+    globalStats: { realGuessedPercent: 81, aiGuessedPercent: 19 }
+  },
+  {
+    id: "ch-015",
+    realImage: {
+      url: "https://images.unsplash.com/photo-1506318137071-a8e063b4bec0?auto=format&fit=crop&q=80&w=800",
+      title: "Meteor Shower",
+      context: "Time-lapse photograph of the Perseid meteor shower over a forest."
+    },
+    aiImage: {
+      url: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&q=80&w=800",
+      prompt: "Rain of shooting stars over a magical forest, glowing trees, realistic night sky",
+      model: "Midjourney v6",
+      giveawayClue: "The meteor trails follow a curved path rather than the straight lines dictated by physics."
+    },
+    globalStats: { realGuessedPercent: 41, aiGuessedPercent: 59 }
   }
 ];

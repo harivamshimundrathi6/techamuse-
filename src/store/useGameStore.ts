@@ -10,8 +10,7 @@ export interface Player {
   roll: string;
   score: number;
   streak: number;
-  hasAnsweredCurrentRound: boolean;
-  lastAnswerCorrect: boolean;
+  answers: Record<string, boolean>;
 }
 
 export interface GlobalGameState {
@@ -27,12 +26,12 @@ interface GameStore extends GlobalGameState {
   playerName: string;
   playerRoll: string;
   timeLeft: number;
+  currentQuestionIndexInRound: number;
   
   initListener: () => void;
   joinGame: (name: string, roll: string) => void;
-  submitAnswer: (isCorrect: boolean) => void;
+  submitAnswer: (isCorrect: boolean, rIdx: number, qIdx: number) => void;
   
-  // Host actions
   hostStartRound: () => void;
   hostShowResult: () => void;
   hostNextRound: () => void;
@@ -42,12 +41,13 @@ interface GameStore extends GlobalGameState {
 const defaultGlobalState: GlobalGameState = {
   gameState: 'waiting',
   currentRoundIndex: 0,
-  totalRounds: 9,
+  totalRounds: 3,
   roundStartTime: null,
   players: {}
 };
 
 let unsubFirebase: (() => void) | null = null;
+let timeInterval: NodeJS.Timeout | null = null;
 
 export const useGameStore = create<GameStore>((set, get) => ({
   ...defaultGlobalState,
@@ -56,42 +56,61 @@ export const useGameStore = create<GameStore>((set, get) => ({
   playerName: '',
   playerRoll: '',
   timeLeft: 0,
+  currentQuestionIndexInRound: 0,
 
   initListener: () => {
-    if (unsubFirebase) return; // already listening
+    if (unsubFirebase) return;
 
     const gameRef = ref(db, 'game');
     const unsub = onValue(gameRef, (snapshot) => {
       const data = snapshot.val();
       if (data) {
-        // Calculate time left if playing
         let timeLeft = 0;
+        let currentQuestionIndexInRound = 0;
+        
         if (data.gameState === 'playing' && data.roundStartTime) {
-          const elapsed = Math.floor((Date.now() - data.roundStartTime) / 1000);
-          timeLeft = Math.max(0, 10 - elapsed);
+          const elapsedMs = Date.now() - data.roundStartTime;
+          const qIdx = Math.floor(elapsedMs / 10000);
+          if (qIdx >= 5) {
+            currentQuestionIndexInRound = 5;
+            timeLeft = 0;
+          } else {
+            currentQuestionIndexInRound = qIdx;
+            timeLeft = Math.ceil((10000 - (elapsedMs % 10000)) / 1000);
+          }
         }
 
         set({
           gameState: data.gameState || 'waiting',
           currentRoundIndex: data.currentRoundIndex || 0,
-          totalRounds: data.totalRounds || 9,
+          totalRounds: data.totalRounds || 3,
           roundStartTime: data.roundStartTime || null,
           players: data.players || {},
-          timeLeft
+          timeLeft,
+          currentQuestionIndexInRound
         });
       }
     });
     
     unsubFirebase = unsub;
     
-    // Also set up a local interval just to tick the timeLeft smoothly if playing
-    setInterval(() => {
+    if (timeInterval) clearInterval(timeInterval);
+    timeInterval = setInterval(() => {
       const state = get();
       if (state.gameState === 'playing' && state.roundStartTime) {
-        const elapsed = Math.floor((Date.now() - state.roundStartTime) / 1000);
-        set({ timeLeft: Math.max(0, 10 - elapsed) });
+        const elapsedMs = Date.now() - state.roundStartTime;
+        const qIdx = Math.floor(elapsedMs / 10000);
+        if (qIdx >= 5) {
+          set({ currentQuestionIndexInRound: 5, timeLeft: 0 });
+        } else {
+          const msLeftInQ = 10000 - (elapsedMs % 10000);
+          set({ 
+            currentQuestionIndexInRound: qIdx, 
+            timeLeft: Math.ceil(msLeftInQ / 1000) 
+          });
+        }
       }
-    }, 1000);
+    }, 200);
   },
 
   joinGame: (name, roll) => {
@@ -102,21 +121,21 @@ export const useGameStore = create<GameStore>((set, get) => ({
       roll,
       score: 0,
       streak: 0,
-      hasAnsweredCurrentRound: false,
-      lastAnswerCorrect: false
+      answers: {}
     };
     
-    // Save to firebase
     set({ playerId: id, playerName: name, playerRoll: roll });
     update(ref(db, `game/players/${id}`), newPlayer);
   },
 
-  submitAnswer: (isCorrect) => {
+  submitAnswer: (isCorrect, rIdx, qIdx) => {
     const { playerId, timeLeft, players } = get();
     if (!playerId) return;
     
     const player = players[playerId];
-    if (!player || player.hasAnsweredCurrentRound) return;
+    const ansKey = `r${rIdx}_q${qIdx}`;
+    
+    if (!player || player.answers?.[ansKey] !== undefined) return;
 
     let newScore = player.score;
     let newStreak = player.streak;
@@ -128,28 +147,20 @@ export const useGameStore = create<GameStore>((set, get) => ({
       newStreak = 0;
     }
 
-    update(ref(db, `game/players/${playerId}`), {
-      hasAnsweredCurrentRound: true,
-      lastAnswerCorrect: isCorrect,
+    const updates: any = {
       score: newScore,
       streak: newStreak
-    });
+    };
+    updates[`answers/${ansKey}`] = isCorrect;
+
+    update(ref(db, `game/players/${playerId}`), updates);
   },
 
   hostStartRound: () => {
-    const { players } = get();
-    const updates: any = {
+    update(ref(db), {
       'game/gameState': 'playing',
       'game/roundStartTime': Date.now(),
-    };
-    
-    // Reset answers for all players
-    Object.keys(players).forEach(id => {
-      updates[`game/players/${id}/hasAnsweredCurrentRound`] = false;
-      updates[`game/players/${id}/lastAnswerCorrect`] = false;
     });
-    
-    update(ref(db), updates);
   },
 
   hostShowResult: () => {

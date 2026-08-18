@@ -7,30 +7,40 @@ import { mockChallenges } from '@/data/mockChallenges';
 import { ZoomIn } from 'lucide-react';
 
 export default function GameArena() {
-  const { currentRoundIndex, timeLeft, totalRounds, submitAnswer, gameState, players, playerId } = useGameStore();
+  const { currentRoundIndex, currentQuestionIndexInRound, timeLeft, submitAnswer, players, playerId } = useGameStore();
   const player = playerId ? players[playerId] : null;
-  const hasAnswered = player?.hasAnsweredCurrentRound || false;
-  const challenge = mockChallenges[currentRoundIndex];
-  const logicalRound = Math.floor(currentRoundIndex / 3) + 1;
-  const logicalQuestion = (currentRoundIndex % 3) + 1;
+  
+  const ansKey = `r${currentRoundIndex}_q${currentQuestionIndexInRound}`;
+  const hasAnswered = player?.answers?.[ansKey] !== undefined;
+  
+  const challengeIdx = currentRoundIndex * 5 + Math.min(currentQuestionIndexInRound, 4);
+  const challenge = mockChallenges[challengeIdx];
   
   // Randomize which card has AI
   const [aiIsLeft, setAiIsLeft] = useState(true);
   
   useEffect(() => {
     setAiIsLeft(Math.random() > 0.5);
-  }, [currentRoundIndex]);
+  }, [currentRoundIndex, currentQuestionIndexInRound]);
   
-  // Server handles time, so we just display timeLeft from server. No need for client-side tickTimer interval here.
+  const handleSelect = (isAi: boolean) => {
+    if (!hasAnswered) submitAnswer(isAi, currentRoundIndex, currentQuestionIndexInRound);
+  };
+  
+  if (currentQuestionIndexInRound >= 5) {
+    return (
+      <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col h-full items-center justify-center">
+        <div className="w-16 h-16 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin mb-8" />
+        <h2 className="text-4xl font-bold text-white neon-text mb-4">Round Complete!</h2>
+        <p className="text-cyan-400 text-xl animate-pulse">Waiting for host to reveal results...</p>
+      </div>
+    );
+  }
+
+  if (!challenge) return null;
   
   const leftImage = aiIsLeft ? challenge.aiImage : challenge.realImage;
   const rightImage = aiIsLeft ? challenge.realImage : challenge.aiImage;
-  
-  const handleSelect = (isAi: boolean) => {
-    if (!hasAnswered) submitAnswer(isAi);
-  };
-  
-  if (!challenge) return null;
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8 flex flex-col h-full relative">
@@ -38,15 +48,15 @@ export default function GameArena() {
         <div className="absolute inset-0 z-40 bg-black/50 backdrop-blur-sm flex flex-col items-center justify-center rounded-3xl">
           <div className="w-16 h-16 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin mb-4" />
           <h3 className="text-2xl font-bold text-white">Answer Locked In!</h3>
-          <p className="text-cyan-400">Waiting for other players...</p>
+          <p className="text-cyan-400">Waiting for next question...</p>
         </div>
       )}
       {/* Header Info */}
       <div className="flex justify-between items-center mb-6">
         <div className="text-cyan-400 font-mono flex items-center space-x-2">
-          <span className="bg-white/10 px-3 py-1 rounded-full">ROUND {logicalRound}</span>
+          <span className="bg-white/10 px-3 py-1 rounded-full">ROUND {currentRoundIndex + 1}</span>
           <span>•</span>
-          <span>QUESTION {logicalQuestion} / 3</span>
+          <span>QUESTION {currentQuestionIndexInRound + 1} / 5</span>
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-gray-400 text-sm uppercase tracking-widest">Time Remaining</span>
@@ -59,6 +69,7 @@ export default function GameArena() {
       {/* Progress Bar */}
       <div className="w-full h-1 bg-gray-800 rounded-full overflow-hidden mb-12">
         <motion.div 
+          key={`progress-${currentRoundIndex}-${currentQuestionIndexInRound}`}
           initial={{ width: '100%' }}
           animate={{ width: `${(timeLeft / 10) * 100}%` }}
           transition={{ duration: 1, ease: 'linear' }}
@@ -136,3 +147,4 @@ export default function GameArena() {
     </div>
   );
 }
+

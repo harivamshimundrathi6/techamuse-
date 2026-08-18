@@ -12,10 +12,9 @@ export default function HostDashboard() {
   }, []);
 
   const players = Object.values(store.players || {});
-  const answeredCount = players.filter(p => p.hasAnsweredCurrentRound).length;
   
-  const logicalRound = Math.floor(store.currentRoundIndex / 3) + 1;
-  const logicalQuestion = (store.currentRoundIndex % 3) + 1;
+  const ansKey = `r${store.currentRoundIndex}_q${Math.min(store.currentQuestionIndexInRound, 4)}`;
+  const answeredCount = players.filter(p => p.answers?.[ansKey] !== undefined).length;
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white p-8">
@@ -44,12 +43,12 @@ export default function HostDashboard() {
               disabled={store.gameState === 'playing' || store.gameState === 'finished'}
               className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
-              <Play className="w-5 h-5" /> <span>Start Round {logicalRound}, Q{logicalQuestion}</span>
+              <Play className="w-5 h-5" /> <span>Start Round {store.currentRoundIndex + 1}</span>
             </button>
             
             <button 
               onClick={store.hostShowResult}
-              disabled={store.gameState !== 'playing'}
+              disabled={store.gameState !== 'playing' || store.currentQuestionIndexInRound < 5}
               className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
               <Eye className="w-5 h-5" /> <span>Show Results</span>
@@ -60,7 +59,7 @@ export default function HostDashboard() {
               disabled={store.gameState !== 'round_result'}
               className="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
-              <FastForward className="w-5 h-5" /> <span>Next Question</span>
+              <FastForward className="w-5 h-5" /> <span>Next Round</span>
             </button>
 
             <div className="mt-auto pt-8">
@@ -77,9 +76,14 @@ export default function HostDashboard() {
           <div className="col-span-2 glass-panel p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Connected Players ({players.length})</h2>
-              {store.gameState === 'playing' && (
+              {store.gameState === 'playing' && store.currentQuestionIndexInRound < 5 && (
                 <div className="bg-cyan-900/50 border border-cyan-400 px-4 py-1 rounded-full text-cyan-400 font-bold text-sm">
-                  Answered: {answeredCount} / {players.length}
+                  Q{store.currentQuestionIndexInRound + 1} Answered: {answeredCount} / {players.length}
+                </div>
+              )}
+              {store.gameState === 'playing' && store.currentQuestionIndexInRound >= 5 && (
+                <div className="bg-green-900/50 border border-green-400 px-4 py-1 rounded-full text-green-400 font-bold text-sm">
+                  Round Finished. Show Results!
                 </div>
               )}
             </div>
@@ -88,31 +92,42 @@ export default function HostDashboard() {
               {players.length === 0 ? (
                 <div className="text-center text-gray-500 py-10">Waiting for players to join...</div>
               ) : (
-                players.sort((a,b) => b.score - a.score).map((p, i) => (
-                  <div key={p.id} className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-white/5">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-xs text-gray-400">
-                        {i + 1}
+                players.sort((a,b) => b.score - a.score).map((p, i) => {
+                  const pAns = p.answers?.[ansKey];
+                  
+                  let roundScoreStr = "";
+                  if (store.gameState === 'round_result') {
+                    let correctCount = 0;
+                    for (let q = 0; q < 5; q++) {
+                      if (p.answers?.[`r${store.currentRoundIndex}_q${q}`] === true) correctCount++;
+                    }
+                    roundScoreStr = `${correctCount}/5`;
+                  }
+
+                  return (
+                    <div key={p.id} className="flex items-center justify-between bg-black/40 p-3 rounded-lg border border-white/5">
+                      <div className="flex items-center space-x-4">
+                        <div className="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-xs text-gray-400">
+                          {i + 1}
+                        </div>
+                        <div>
+                          <div className="font-bold">{p.name} <span className="text-xs text-gray-500 ml-1">#{p.roll}</span></div>
+                          <div className="text-xs text-cyan-400">{p.score} PTS</div>
+                        </div>
                       </div>
                       <div>
-                        <div className="font-bold">{p.name} <span className="text-xs text-gray-500 ml-1">#{p.roll}</span></div>
-                        <div className="text-xs text-cyan-400">{p.score} PTS</div>
+                        {store.gameState === 'playing' && store.currentQuestionIndexInRound < 5 && (
+                          pAns !== undefined ? 
+                            <span className="text-green-400 text-sm bg-green-400/10 px-2 py-1 rounded">Locked In</span> : 
+                            <span className="text-yellow-400 text-sm animate-pulse">Thinking...</span>
+                        )}
+                        {store.gameState === 'round_result' && (
+                          <span className="text-purple-400 font-bold">{roundScoreStr} Correct</span>
+                        )}
                       </div>
                     </div>
-                    <div>
-                      {store.gameState === 'playing' && (
-                        p.hasAnsweredCurrentRound ? 
-                          <span className="text-green-400 text-sm bg-green-400/10 px-2 py-1 rounded">Locked In</span> : 
-                          <span className="text-yellow-400 text-sm animate-pulse">Thinking...</span>
-                      )}
-                      {store.gameState === 'round_result' && (
-                        p.lastAnswerCorrect ? 
-                          <span className="text-green-400 font-bold">Correct</span> : 
-                          <span className="text-red-400 font-bold">Wrong</span>
-                      )}
-                    </div>
-                  </div>
-                ))
+                  )
+                })
               )}
             </div>
           </div>
@@ -121,3 +136,4 @@ export default function HostDashboard() {
     </div>
   );
 }
+
