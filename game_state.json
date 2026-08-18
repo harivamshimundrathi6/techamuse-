@@ -1,7 +1,0 @@
-{
-  "gameState": "waiting",
-  "currentRoundIndex": 0,
-  "totalRounds": 3,
-  "roundStartTime": null,
-  "players": {}
-}

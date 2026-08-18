@@ -10,15 +10,11 @@ import { Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Home() {
-  const { gameState, joinGame, playerId, syncState } = useGameStore();
+  const { gameState, joinGame, playerId, initListener } = useGameStore();
 
   useEffect(() => {
-    // Poll the server state every 1 second
-    const interval = setInterval(() => {
-      syncState();
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [syncState]);
+    initListener();
+  }, [initListener]);
 
   return (
     <main className="min-h-screen flex flex-col relative overflow-hidden bg-[#0B0F19]">

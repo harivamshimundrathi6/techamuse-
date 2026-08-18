@@ -1,35 +1,17 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { GlobalGameState } from '@/lib/db';
+import { useEffect } from 'react';
+import { useGameStore } from '@/store/useGameStore';
 import { Shield, Play, FastForward, RotateCcw, Eye } from 'lucide-react';
 
 export default function HostDashboard() {
-  const [state, setState] = useState<GlobalGameState | null>(null);
+  const store = useGameStore();
 
   useEffect(() => {
-    const fetchState = async () => {
-      const res = await fetch('/api/state');
-      const data = await res.json();
-      setState(data);
-    };
-    
-    fetchState();
-    const interval = setInterval(fetchState, 1000);
-    return () => clearInterval(interval);
+    store.initListener();
   }, []);
 
-  const handleAction = async (action: string) => {
-    await fetch('/api/host', {
-      method: 'POST',
-      body: JSON.stringify({ action }),
-      headers: { 'Content-Type': 'application/json' }
-    });
-  };
-
-  if (!state) return <div className="p-10 text-white">Loading Host Dashboard...</div>;
-
-  const players = Object.values(state.players);
+  const players = Object.values(store.players || {});
   const answeredCount = players.filter(p => p.hasAnsweredCurrentRound).length;
 
   return (
@@ -45,7 +27,7 @@ export default function HostDashboard() {
           </div>
           <div className="text-right">
             <div className="text-sm text-gray-400 uppercase">Status</div>
-            <div className="text-2xl font-bold text-cyan-400 capitalize">{state.gameState.replace('_', ' ')}</div>
+            <div className="text-2xl font-bold text-cyan-400 capitalize">{store.gameState.replace('_', ' ')}</div>
           </div>
         </div>
 
@@ -55,24 +37,24 @@ export default function HostDashboard() {
             <h2 className="text-xl font-bold mb-2">Controls</h2>
             
             <button 
-              onClick={() => handleAction('startRound')}
-              disabled={state.gameState === 'playing' || state.gameState === 'finished'}
+              onClick={store.hostStartRound}
+              disabled={store.gameState === 'playing' || store.gameState === 'finished'}
               className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
-              <Play className="w-5 h-5" /> <span>Start Round {state.currentRoundIndex + 1}</span>
+              <Play className="w-5 h-5" /> <span>Start Round {store.currentRoundIndex + 1}</span>
             </button>
             
             <button 
-              onClick={() => handleAction('showResult')}
-              disabled={state.gameState !== 'playing'}
+              onClick={store.hostShowResult}
+              disabled={store.gameState !== 'playing'}
               className="flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
               <Eye className="w-5 h-5" /> <span>Show Results</span>
             </button>
             
             <button 
-              onClick={() => handleAction('nextRound')}
-              disabled={state.gameState !== 'round_result'}
+              onClick={store.hostNextRound}
+              disabled={store.gameState !== 'round_result'}
               className="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
               <FastForward className="w-5 h-5" /> <span>Next Round</span>
@@ -80,7 +62,7 @@ export default function HostDashboard() {
 
             <div className="mt-auto pt-8">
               <button 
-                onClick={() => handleAction('resetGame')}
+                onClick={store.hostResetGame}
                 className="w-full flex items-center justify-center space-x-2 bg-red-600/20 hover:bg-red-600 border border-red-600/50 py-3 rounded-lg font-bold text-red-500 hover:text-white transition-colors"
               >
                 <RotateCcw className="w-5 h-5" /> <span>Reset & Kick All</span>
@@ -92,7 +74,7 @@ export default function HostDashboard() {
           <div className="col-span-2 glass-panel p-6 rounded-2xl">
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold">Connected Players ({players.length})</h2>
-              {state.gameState === 'playing' && (
+              {store.gameState === 'playing' && (
                 <div className="bg-cyan-900/50 border border-cyan-400 px-4 py-1 rounded-full text-cyan-400 font-bold text-sm">
                   Answered: {answeredCount} / {players.length}
                 </div>
@@ -115,12 +97,12 @@ export default function HostDashboard() {
                       </div>
                     </div>
                     <div>
-                      {state.gameState === 'playing' && (
+                      {store.gameState === 'playing' && (
                         p.hasAnsweredCurrentRound ? 
                           <span className="text-green-400 text-sm bg-green-400/10 px-2 py-1 rounded">Locked In</span> : 
                           <span className="text-yellow-400 text-sm animate-pulse">Thinking...</span>
                       )}
-                      {state.gameState === 'round_result' && (
+                      {store.gameState === 'round_result' && (
                         p.lastAnswerCorrect ? 
                           <span className="text-green-400 font-bold">Correct</span> : 
                           <span className="text-red-400 font-bold">Wrong</span>
