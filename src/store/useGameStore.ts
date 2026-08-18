@@ -72,10 +72,10 @@ export const useGameStore = create<GameStore>((set, get) => ({
         }
 
         set({
-          gameState: data.gameState,
-          currentRoundIndex: data.currentRoundIndex,
-          totalRounds: data.totalRounds,
-          roundStartTime: data.roundStartTime,
+          gameState: data.gameState || 'waiting',
+          currentRoundIndex: data.currentRoundIndex || 0,
+          totalRounds: data.totalRounds || 3,
+          roundStartTime: data.roundStartTime || null,
           players: data.players || {},
           timeLeft
         });
