@@ -17,10 +17,10 @@ export default function EndScreen() {
   let rank = "Easily Fooled Mortal";
   let color = "text-gray-400";
   
-  if (score > 1500) {
+  if (score > 4500) {
     rank = "Zero-G Visionary";
     color = "text-cyan-400";
-  } else if (score > 800) {
+  } else if (score > 2000) {
     rank = "AI Detective";
     color = "text-purple-400";
   }

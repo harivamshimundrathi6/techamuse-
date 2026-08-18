@@ -13,6 +13,9 @@ export default function HostDashboard() {
 
   const players = Object.values(store.players || {});
   const answeredCount = players.filter(p => p.hasAnsweredCurrentRound).length;
+  
+  const logicalRound = Math.floor(store.currentRoundIndex / 3) + 1;
+  const logicalQuestion = (store.currentRoundIndex % 3) + 1;
 
   return (
     <div className="min-h-screen bg-[#0B0F19] text-white p-8">
@@ -41,7 +44,7 @@ export default function HostDashboard() {
               disabled={store.gameState === 'playing' || store.gameState === 'finished'}
               className="flex items-center justify-center space-x-2 bg-green-600 hover:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
-              <Play className="w-5 h-5" /> <span>Start Round {store.currentRoundIndex + 1}</span>
+              <Play className="w-5 h-5" /> <span>Start Round {logicalRound}, Q{logicalQuestion}</span>
             </button>
             
             <button 
@@ -57,7 +60,7 @@ export default function HostDashboard() {
               disabled={store.gameState !== 'round_result'}
               className="flex items-center justify-center space-x-2 bg-purple-600 hover:bg-purple-500 disabled:opacity-50 disabled:cursor-not-allowed py-3 rounded-lg font-bold transition-colors"
             >
-              <FastForward className="w-5 h-5" /> <span>Next Round</span>
+              <FastForward className="w-5 h-5" /> <span>Next Question</span>
             </button>
 
             <div className="mt-auto pt-8">

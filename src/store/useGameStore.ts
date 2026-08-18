@@ -42,7 +42,7 @@ interface GameStore extends GlobalGameState {
 const defaultGlobalState: GlobalGameState = {
   gameState: 'waiting',
   currentRoundIndex: 0,
-  totalRounds: 3,
+  totalRounds: 9,
   roundStartTime: null,
   players: {}
 };
@@ -74,7 +74,7 @@ export const useGameStore = create<GameStore>((set, get) => ({
         set({
           gameState: data.gameState || 'waiting',
           currentRoundIndex: data.currentRoundIndex || 0,
-          totalRounds: data.totalRounds || 3,
+          totalRounds: data.totalRounds || 9,
           roundStartTime: data.roundStartTime || null,
           players: data.players || {},
           timeLeft

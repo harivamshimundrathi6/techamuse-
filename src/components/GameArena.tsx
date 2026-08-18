@@ -11,6 +11,8 @@ export default function GameArena() {
   const player = playerId ? players[playerId] : null;
   const hasAnswered = player?.hasAnsweredCurrentRound || false;
   const challenge = mockChallenges[currentRoundIndex];
+  const logicalRound = Math.floor(currentRoundIndex / 3) + 1;
+  const logicalQuestion = (currentRoundIndex % 3) + 1;
   
   // Randomize which card has AI
   const [aiIsLeft, setAiIsLeft] = useState(true);
@@ -41,8 +43,10 @@ export default function GameArena() {
       )}
       {/* Header Info */}
       <div className="flex justify-between items-center mb-6">
-        <div className="text-cyan-400 font-mono">
-          ROUND {currentRoundIndex + 1} / {totalRounds}
+        <div className="text-cyan-400 font-mono flex items-center space-x-2">
+          <span className="bg-white/10 px-3 py-1 rounded-full">ROUND {logicalRound}</span>
+          <span>•</span>
+          <span>QUESTION {logicalQuestion} / 3</span>
         </div>
         <div className="flex items-center space-x-3">
           <span className="text-gray-400 text-sm uppercase tracking-widest">Time Remaining</span>
