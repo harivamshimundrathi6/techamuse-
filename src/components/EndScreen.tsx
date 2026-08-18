@@ -6,7 +6,7 @@ import { Trophy, Share2, RotateCcw, Medal } from 'lucide-react';
 import Leaderboard from './Leaderboard';
 
 export default function EndScreen() {
-  const { totalRounds, resetGame, startGame, playerName, playerRoll, players, playerId } = useGameStore();
+  const { totalRounds, playerName, playerRoll, players, playerId } = useGameStore();
   const player = playerId ? players[playerId] : null;
   const score = player?.score || 0;
   
@@ -62,7 +62,7 @@ export default function EndScreen() {
         </div>
         
         <div className="mt-12 pt-8 border-t border-white/10">
-          <Leaderboard currentScore={score} />
+          <Leaderboard />
         </div>
       </motion.div>
     </div>

@@ -7,7 +7,7 @@ import { mockChallenges } from '@/data/mockChallenges';
 import { ZoomIn } from 'lucide-react';
 
 export default function GameArena() {
-  const { currentRoundIndex, timeLeft, totalRounds, submitAnswer, tickTimer, gameState, players, playerId } = useGameStore();
+  const { currentRoundIndex, timeLeft, totalRounds, submitAnswer, gameState, players, playerId } = useGameStore();
   const player = playerId ? players[playerId] : null;
   const hasAnswered = player?.hasAnsweredCurrentRound || false;
   const challenge = mockChallenges[currentRoundIndex];
